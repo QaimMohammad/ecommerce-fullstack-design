@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Heart, Star, Share2 } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -15,11 +15,6 @@ const Footer = () => {
           <p className="footer__tagline">
             Your destination for premium products. Quality, style, and value — all in one place.
           </p>
-          <div className="footer__socials">
-            <a href="#!" aria-label="Social"><Heart size={18} /></a>
-            <a href="#!" aria-label="Share"><Share2 size={18} /></a>
-            <a href="#!" aria-label="Star"><Star size={18} /></a>
-          </div>
         </div>
 
         <div className="footer__links">
