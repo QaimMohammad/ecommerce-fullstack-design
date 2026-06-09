@@ -1,90 +1,98 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-const Product = require('../models/Product');
 const { protect } = require('../middleware/auth');
 
-// GET /api/cart - Get user cart
+const getDb = () => require('mongoose').connection.db;
+const { ObjectId } = require('mongoose').mongo;
+
+// GET /api/cart
 router.get('/', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('cart.product');
-    res.json({ success: true, cart: user.cart });
+    const db = getDb();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+    const cart = user.cart || [];
+    // Populate products
+    const populated = await Promise.all(cart.map(async (item) => {
+      const product = await db.collection('products').findOne({ _id: new ObjectId(item.product) });
+      return { product, quantity: item.quantity };
+    }));
+    res.json({ success: true, cart: populated.filter(i => i.product) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// POST /api/cart - Add item to cart
+// POST /api/cart
 router.post('/', protect, async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    const user = await User.findById(req.user._id);
-    const existingItem = user.cart.find((item) => item.product.toString() === productId);
-
-    if (existingItem) {
-      existingItem.quantity += quantity;
+    const db = getDb();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+    const cart = user.cart || [];
+    const existingIndex = cart.findIndex(i => i.product.toString() === productId);
+    if (existingIndex > -1) {
+      cart[existingIndex].quantity += quantity;
     } else {
-      user.cart.push({ product: productId, quantity });
+      cart.push({ product: new ObjectId(productId), quantity });
     }
-
-    await user.save();
-    const updatedUser = await User.findById(req.user._id).populate('cart.product');
-    res.json({ success: true, cart: updatedUser.cart });
+    await db.collection('users').updateOne({ _id: new ObjectId(req.user._id) }, { $set: { cart } });
+    const populated = await Promise.all(cart.map(async (item) => {
+      const product = await db.collection('products').findOne({ _id: new ObjectId(item.product) });
+      return { product, quantity: item.quantity };
+    }));
+    res.json({ success: true, cart: populated.filter(i => i.product) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// PUT /api/cart/:productId - Update cart item quantity
+// PUT /api/cart/:productId
 router.put('/:productId', protect, async (req, res) => {
   try {
     const { quantity } = req.body;
-    const user = await User.findById(req.user._id);
-    const item = user.cart.find((i) => i.product.toString() === req.params.productId);
-
-    if (!item) {
-      return res.status(404).json({ success: false, message: 'Item not in cart' });
-    }
-
+    const db = getDb();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+    let cart = user.cart || [];
     if (quantity <= 0) {
-      user.cart = user.cart.filter((i) => i.product.toString() !== req.params.productId);
+      cart = cart.filter(i => i.product.toString() !== req.params.productId);
     } else {
-      item.quantity = quantity;
+      const idx = cart.findIndex(i => i.product.toString() === req.params.productId);
+      if (idx > -1) cart[idx].quantity = quantity;
     }
-
-    await user.save();
-    const updatedUser = await User.findById(req.user._id).populate('cart.product');
-    res.json({ success: true, cart: updatedUser.cart });
+    await db.collection('users').updateOne({ _id: new ObjectId(req.user._id) }, { $set: { cart } });
+    const populated = await Promise.all(cart.map(async (item) => {
+      const product = await db.collection('products').findOne({ _id: new ObjectId(item.product) });
+      return { product, quantity: item.quantity };
+    }));
+    res.json({ success: true, cart: populated.filter(i => i.product) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// DELETE /api/cart/:productId - Remove item from cart
+// DELETE /api/cart/:productId
 router.delete('/:productId', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    user.cart = user.cart.filter((i) => i.product.toString() !== req.params.productId);
-    await user.save();
-    const updatedUser = await User.findById(req.user._id).populate('cart.product');
-    res.json({ success: true, cart: updatedUser.cart });
+    const db = getDb();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+    const cart = (user.cart || []).filter(i => i.product.toString() !== req.params.productId);
+    await db.collection('users').updateOne({ _id: new ObjectId(req.user._id) }, { $set: { cart } });
+    const populated = await Promise.all(cart.map(async (item) => {
+      const product = await db.collection('products').findOne({ _id: new ObjectId(item.product) });
+      return { product, quantity: item.quantity };
+    }));
+    res.json({ success: true, cart: populated.filter(i => i.product) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// DELETE /api/cart - Clear entire cart
+// DELETE /api/cart
 router.delete('/', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    user.cart = [];
-    await user.save();
-    res.json({ success: true, cart: [], message: 'Cart cleared' });
+    const db = getDb();
+    await db.collection('users').updateOne({ _id: new ObjectId(req.user._id) }, { $set: { cart: [] } });
+    res.json({ success: true, cart: [] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
