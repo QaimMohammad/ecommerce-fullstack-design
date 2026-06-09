@@ -79,10 +79,7 @@ router.get('/me', protect, async (req, res) => {
 // POST /api/auth/seed-admin - Create admin (development only)
 router.post('/seed-admin', async (req, res) => {
   try {
-    const existing = await User.findOne({ email: 'admin@store.com' });
-    if (existing) {
-      return res.json({ success: true, message: 'Admin already exists', email: 'admin@store.com', password: 'admin123' });
-    }
+   await User.deleteOne({ email: 'admin@store.com' });
     const admin = await User.create({
       name: 'Admin User',
       email: 'admin@store.com',
