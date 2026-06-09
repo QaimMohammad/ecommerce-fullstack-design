@@ -7,28 +7,24 @@ const { protect, signToken } = require('../middleware/auth');
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Please provide name, email and password' });
     }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const bcrypt = require('bcryptjs');
+    const db = require('mongoose').connection.db;
+    const existing = await db.collection('users').findOne({ email });
+    if (existing) {
       return res.status(400).json({ success: false, message: 'Email already in use' });
     }
-
-    const user = await User.create({ name, email, password });
-    const token = signToken(user._id);
-
+    const hashed = await bcrypt.hash(password, 12);
+    const result = await db.collection('users').insertOne({
+      name, email, password: hashed, role: 'user', cart: [],
+      createdAt: new Date(), updatedAt: new Date(),
+    });
+    const token = signToken(result.insertedId);
     res.status(201).json({
-      success: true,
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      success: true, token,
+      user: { _id: result.insertedId, name, email, role: 'user' },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
