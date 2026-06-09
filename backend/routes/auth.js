@@ -79,14 +79,20 @@ router.get('/me', protect, async (req, res) => {
 // POST /api/auth/seed-admin - Create admin (development only)
 router.post('/seed-admin', async (req, res) => {
   try {
-   await User.deleteOne({ email: 'admin@store.com' });
-    const admin = await User.create({
+    const bcrypt = require('bcryptjs');
+    const db = require('mongoose').connection.db;
+    await db.collection('users').deleteOne({ email: 'admin@store.com' });
+    const hashed = await bcrypt.hash('admin123', 12);
+    await db.collection('users').insertOne({
       name: 'Admin User',
       email: 'admin@store.com',
-      password: 'admin123',
+      password: hashed,
       role: 'admin',
+      cart: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
-    res.json({ success: true, message: 'Admin created', email: admin.email, password: 'admin123' });
+    res.json({ success: true, email: 'admin@store.com', password: 'admin123' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
