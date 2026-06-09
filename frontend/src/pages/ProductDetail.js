@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShoppingCart, Star, ChevronLeft, Check, Minus, Plus, Truck, Shield, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Star, Check, Minus, Plus, Truck, Shield, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
