@@ -66,8 +66,12 @@ export const CartProvider = ({ children }) => {
         const { data } = await axios.post(`${API_URL}/cart`, { productId: product._id, quantity });
         setCart(data.cart);
         toast.success(`${product.name} added to cart!`);
+        return true;
       } catch (err) {
-        toast.error('Failed to add to cart');
+        if (err.response?.status !== 401) {
+          toast.error('Failed to add to cart');
+        }
+        return false;
       }
     } else {
       // Guest cart
@@ -82,6 +86,7 @@ export const CartProvider = ({ children }) => {
         toast.success(`${product.name} added to cart!`);
         return [...prev, { product, quantity }];
       });
+      return true;
     }
   }, [user]);
 

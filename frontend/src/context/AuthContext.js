@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -33,6 +34,26 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
+  }, []);
+
+  // If the server rejects our token (expired, or signed with a rotated
+  // secret), clear the dead session instead of failing every request.
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (res) => res,
+      (error) => {
+        const isLoginAttempt = error.config?.url?.includes('/auth/login');
+        if (error.response?.status === 401 && !isLoginAttempt && localStorage.getItem('token')) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setAuthHeader(null);
+          setUser(null);
+          toast.error('Your session expired. Please log in again.');
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
   const login = async (email, password) => {

@@ -42,9 +42,11 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!product || product.stock === 0) return;
-    await addToCart(product, quantity);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    const ok = await addToCart(product, quantity);
+    if (ok) {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    }
   };
 
   const renderStars = (rating) =>
