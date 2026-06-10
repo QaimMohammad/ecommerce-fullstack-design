@@ -67,6 +67,7 @@ const Cart = () => {
                       <button
                         onClick={() => updateQuantity(p._id, item.quantity - 1)}
                         disabled={item.quantity <= 1}
+                        aria-label={`Decrease quantity of ${p.name}`}
                       >
                         <Minus size={13} />
                       </button>
@@ -74,6 +75,7 @@ const Cart = () => {
                       <button
                         onClick={() => updateQuantity(p._id, item.quantity + 1)}
                         disabled={item.quantity >= (p.stock || 99)}
+                        aria-label={`Increase quantity of ${p.name}`}
                       >
                         <Plus size={13} />
                       </button>
@@ -83,6 +85,7 @@ const Cart = () => {
                       className="cart-item__remove"
                       onClick={() => removeFromCart(p._id)}
                       title="Remove"
+                      aria-label={`Remove ${p.name} from cart`}
                     >
                       <Trash2 size={15} />
                     </button>

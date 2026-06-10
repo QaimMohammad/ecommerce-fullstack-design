@@ -35,7 +35,7 @@
   padding: 10px 36px 10px 14px;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--font-body);
   color: var(--text);
   background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
@@ -183,7 +183,7 @@
   padding: 8px 18px;
   border: 2px solid var(--border);
   border-radius: 100px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   background: white;
   color: var(--text-muted);

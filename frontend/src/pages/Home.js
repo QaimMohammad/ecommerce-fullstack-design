@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, Shield, Truck, RefreshCw, Star } from 'lucide-react';
+import {
+  ArrowRight, Zap, Shield, Truck, RefreshCw, Star, BadgePercent,
+  Smartphone, Shirt, Armchair, Dumbbell, Sparkles, BookOpen,
+} from 'lucide-react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
 import './Home.css';
@@ -8,12 +11,12 @@ import './Home.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const CATEGORIES = [
-  { id: 'electronics', label: 'Electronics', emoji: '⚡', color: '#3b82f6' },
-  { id: 'fashion', label: 'Fashion', emoji: '👗', color: '#ec4899' },
-  { id: 'home', label: 'Home & Living', emoji: '🏠', color: '#10b981' },
-  { id: 'sports', label: 'Sports', emoji: '🏃', color: '#f59e0b' },
-  { id: 'beauty', label: 'Beauty', emoji: '✨', color: '#8b5cf6' },
-  { id: 'books', label: 'Books', emoji: '📚', color: '#06b6d4' },
+  { id: 'electronics', label: 'Electronics', icon: Smartphone, color: '#3b82f6' },
+  { id: 'fashion', label: 'Fashion', icon: Shirt, color: '#ec4899' },
+  { id: 'home', label: 'Home & Living', icon: Armchair, color: '#10b981' },
+  { id: 'sports', label: 'Sports', icon: Dumbbell, color: '#f59e0b' },
+  { id: 'beauty', label: 'Beauty', icon: Sparkles, color: '#8b5cf6' },
+  { id: 'books', label: 'Books', icon: BookOpen, color: '#06b6d4' },
 ];
 
 const FEATURES = [
@@ -79,8 +82,8 @@ const Home = () => {
               </div>
               <div className="hero__stat-divider" />
               <div className="hero__stat">
-                <strong>4.9★</strong>
-                <span>Rating</span>
+                <strong>4.9<Star size={14} fill="currentColor" strokeWidth={0} /></strong>
+                <span>Average Rating</span>
               </div>
             </div>
           </div>
@@ -97,7 +100,9 @@ const Home = () => {
                 className="hero__image hero__image--secondary"
               />
               <div className="hero__float-card">
-                <div className="hero__float-icon">🎉</div>
+                <div className="hero__float-icon">
+                  <BadgePercent size={22} />
+                </div>
                 <div>
                   <p className="hero__float-label">Limited Time</p>
                   <p className="hero__float-value">Up to 40% Off</p>
@@ -136,17 +141,22 @@ const Home = () => {
             </Link>
           </div>
           <div className="categories__grid">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/products?category=${cat.id}`}
-                className="category-card"
-                style={{ '--cat-color': cat.color }}
-              >
-                <span className="category-card__emoji">{cat.emoji}</span>
-                <span className="category-card__label">{cat.label}</span>
-              </Link>
-            ))}
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <Link
+                  key={cat.id}
+                  to={`/products?category=${cat.id}`}
+                  className="category-card"
+                  style={{ '--cat-color': cat.color }}
+                >
+                  <span className="category-card__icon">
+                    <Icon size={24} strokeWidth={1.8} />
+                  </span>
+                  <span className="category-card__label">{cat.label}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -165,8 +175,17 @@ const Home = () => {
           </div>
 
           {loading ? (
-            <div className="page-loader">
-              <div className="spinner" />
+            <div className="product-grid" aria-hidden="true">
+              {Array.from({ length: 8 }, (_, i) => (
+                <div key={i} className="skeleton-card">
+                  <div className="skeleton-line skeleton-card__image" />
+                  <div className="skeleton-card__body">
+                    <div className="skeleton-line skeleton-line--sm" />
+                    <div className="skeleton-line skeleton-line--md" />
+                    <div className="skeleton-line skeleton-line--lg" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : featuredProducts.length > 0 ? (
             <div className="product-grid">

@@ -156,7 +156,7 @@ const Products = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
               {search && (
-                <button type="button" onClick={() => { setSearch(''); setPage(1); }}>
+                <button type="button" aria-label="Clear search" onClick={() => { setSearch(''); setPage(1); }}>
                   <X size={14} />
                 </button>
               )}
@@ -207,8 +207,17 @@ const Products = () => {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="page-loader">
-            <div className="spinner" />
+          <div className="product-grid" aria-hidden="true">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-line skeleton-card__image" />
+                <div className="skeleton-card__body">
+                  <div className="skeleton-line skeleton-line--sm" />
+                  <div className="skeleton-line skeleton-line--md" />
+                  <div className="skeleton-line skeleton-line--lg" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : products.length > 0 ? (
           <>
@@ -225,6 +234,7 @@ const Products = () => {
                   className="pagination__btn"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
+                  aria-label="Previous page"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -252,6 +262,7 @@ const Products = () => {
                   className="pagination__btn"
                   disabled={page >= pagination.pages}
                   onClick={() => setPage((p) => p + 1)}
+                  aria-label="Next page"
                 >
                   <ChevronRight size={16} />
                 </button>

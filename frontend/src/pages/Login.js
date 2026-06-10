@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './Auth.css';
@@ -99,7 +99,12 @@ const Login = () => {
                 onChange={handleChange}
                 autoComplete="current-password"
               />
-              <button type="button" className="auth-eye" onClick={() => setShowPass(!showPass)}>
+              <button
+                type="button"
+                className="auth-eye"
+                onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? 'Hide password' : 'Show password'}
+              >
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -126,7 +131,10 @@ const Login = () => {
           <p>Thousands of products, curated for you.</p>
           <div className="auth-visual__features">
             {['Free shipping on $50+', '30-day easy returns', 'Secure checkout', '24/7 support'].map((f) => (
-              <div key={f} className="auth-visual__feature">✓ {f}</div>
+              <div key={f} className="auth-visual__feature">
+                <span className="auth-visual__check"><Check size={12} strokeWidth={3} /></span>
+                {f}
+              </div>
             ))}
           </div>
         </div>

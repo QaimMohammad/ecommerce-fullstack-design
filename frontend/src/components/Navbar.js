@@ -58,11 +58,12 @@ const Navbar = () => {
         </nav>
 
         {/* Desktop Search */}
-        <form className="navbar__search" onSubmit={handleSearch}>
+        <form className="navbar__search" onSubmit={handleSearch} role="search">
           <Search size={16} />
           <input
             type="text"
             placeholder="Search products..."
+            aria-label="Search products"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -70,7 +71,7 @@ const Navbar = () => {
 
         {/* Desktop Actions */}
         <div className="navbar__actions">
-          <Link to="/cart" className="navbar__cart">
+          <Link to="/cart" className="navbar__cart" aria-label={`Shopping cart, ${cartCount} item${cartCount !== 1 ? 's' : ''}`}>
             <ShoppingCart size={20} />
             {cartCount > 0 && <span className="navbar__cart-badge">{cartCount}</span>}
           </Link>
@@ -125,11 +126,16 @@ const Navbar = () => {
 
         {/* Mobile Toggle */}
         <div className="navbar__mobile-actions">
-          <Link to="/cart" className="navbar__cart">
+          <Link to="/cart" className="navbar__cart" aria-label={`Shopping cart, ${cartCount} item${cartCount !== 1 ? 's' : ''}`}>
             <ShoppingCart size={20} />
             {cartCount > 0 && <span className="navbar__cart-badge">{cartCount}</span>}
           </Link>
-          <button className="navbar__hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+          <button
+            className="navbar__hamburger"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+          >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>

@@ -157,6 +157,7 @@ const ProductDetail = () => {
                     className="quantity-btn"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1}
+                    aria-label="Decrease quantity"
                   >
                     <Minus size={14} />
                   </button>
@@ -165,6 +166,7 @@ const ProductDetail = () => {
                     className="quantity-btn"
                     onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
                     disabled={quantity >= product.stock}
+                    aria-label="Increase quantity"
                   >
                     <Plus size={14} />
                   </button>

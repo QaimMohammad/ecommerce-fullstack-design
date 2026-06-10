@@ -1,7 +1,17 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ecommerce_jwt_secret_key_2024';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET environment variable must be set in production.');
+    process.exit(1);
+  }
+  console.warn('WARNING: JWT_SECRET is not set. Using an insecure development-only fallback.');
+}
+
+const SECRET = JWT_SECRET || 'dev_only_insecure_secret';
 
 // Protect routes - require login
 exports.protect = async (req, res, next) => {
@@ -19,7 +29,7 @@ exports.protect = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Not authorized. Please log in.' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, SECRET);
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -43,5 +53,5 @@ exports.adminOnly = (req, res, next) => {
 
 // Generate JWT token
 exports.signToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id }, SECRET, { expiresIn: '7d' });
 };

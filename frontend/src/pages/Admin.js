@@ -141,15 +141,6 @@ const Admin = () => {
     }
   };
 
-  const handleSeedAdmin = async () => {
-    try {
-      const { data } = await axios.post(`${API_URL}/auth/seed-admin`);
-      toast.success(`Admin: ${data.email} / ${data.password}`);
-    } catch {
-      toast.error('Failed');
-    }
-  };
-
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
@@ -165,11 +156,8 @@ const Admin = () => {
             <p className="admin-subtitle">Manage your store's products</p>
           </div>
           <div className="admin-header__actions">
-            <button className="btn btn-outline" onClick={handleSeedAdmin} style={{ fontSize: '13px', padding: '10px 16px' }}>
-              Seed Admin
-            </button>
-            <button className={`btn btn-outline${seeding ? ' loading' : ''}`} onClick={handleSeed} style={{ fontSize: '13px', padding: '10px 16px' }}>
-              <RefreshCw size={14} /> Seed Products
+            <button className={`btn btn-outline${seeding ? ' loading' : ''}`} onClick={handleSeed} disabled={seeding} style={{ fontSize: '14px', padding: '10px 16px' }}>
+              <RefreshCw size={14} /> {seeding ? 'Seeding…' : 'Seed Products'}
             </button>
             <button className="btn btn-primary" onClick={openCreate}>
               <Plus size={16} /> Add Product
@@ -204,7 +192,7 @@ const Admin = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          {search && <button onClick={() => setSearch('')}><X size={14} /></button>}
+          {search && <button aria-label="Clear search" onClick={() => setSearch('')}><X size={14} /></button>}
         </div>
 
         {/* Products Table */}

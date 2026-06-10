@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './Auth.css';
@@ -20,7 +20,7 @@ const Register = () => {
     if (!form.email) errs.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email';
     if (!form.password) errs.password = 'Password is required';
-    else if (form.password.length < 6) errs.password = 'Minimum 6 characters';
+    else if (form.password.length < 8) errs.password = 'Minimum 8 characters';
     if (!form.confirm) errs.confirm = 'Please confirm your password';
     else if (form.password !== form.confirm) errs.confirm = 'Passwords do not match';
     return errs;
@@ -34,7 +34,7 @@ const Register = () => {
     setLoading(true);
     try {
       await register(form.name, form.email, form.password);
-      toast.success('Account created! Welcome to ShopFlow 🎉');
+      toast.success('Account created! Welcome to ShopFlow.');
       navigate('/');
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
@@ -108,12 +108,17 @@ const Register = () => {
                 type={showPass ? 'text' : 'password'}
                 name="password"
                 className="form-input"
-                placeholder="Min. 6 characters"
+                placeholder="Min. 8 characters"
                 value={form.password}
                 onChange={handleChange}
                 autoComplete="new-password"
               />
-              <button type="button" className="auth-eye" onClick={() => setShowPass(!showPass)}>
+              <button
+                type="button"
+                className="auth-eye"
+                onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? 'Hide password' : 'Show password'}
+              >
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -153,7 +158,10 @@ const Register = () => {
           <p>Create an account to unlock all features.</p>
           <div className="auth-visual__features">
             {['Track your orders', 'Save your cart', 'Exclusive member deals', 'Faster checkout'].map((f) => (
-              <div key={f} className="auth-visual__feature">✓ {f}</div>
+              <div key={f} className="auth-visual__feature">
+                <span className="auth-visual__check"><Check size={12} strokeWidth={3} /></span>
+                {f}
+              </div>
             ))}
           </div>
         </div>

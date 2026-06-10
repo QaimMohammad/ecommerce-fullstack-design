@@ -59,7 +59,7 @@
 .navbar__links a {
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-muted);
   transition: all 0.2s;
@@ -104,7 +104,7 @@
 .navbar__search input {
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   width: 100%;
   color: var(--text);
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -45,7 +45,7 @@ function App() {
                 <div style={{ paddingTop: '120px', textAlign: 'center', minHeight: '60vh' }}>
                   <h2 style={{ fontSize: '48px', fontFamily: 'var(--font-display)', marginBottom: '16px' }}>404</h2>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Page not found.</p>
-                  <a href="/" className="btn btn-primary">Go Home</a>
+                  <Link to="/" className="btn btn-primary">Go Home</Link>
                 </div>
               } />
             </Routes>

@@ -1,7 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const { protect, adminOnly } = require('../middleware/auth');
+
+// Escape user input before embedding it in a regex (prevents ReDoS / regex injection)
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Only these fields are accepted from clients on create/update (mass-assignment guard)
+const pickProductFields = (body) => {
+  const allowed = ['name', 'price', 'originalPrice', 'image', 'images', 'description', 'category', 'stock', 'rating', 'numReviews', 'featured', 'brand', 'tags'];
+  const out = {};
+  for (const key of allowed) {
+    if (body[key] !== undefined) out[key] = body[key];
+  }
+  return out;
+};
 
 // GET /api/products - Get all products with search, filter, pagination
 router.get('/', async (req, res) => {
@@ -11,25 +25,27 @@ router.get('/', async (req, res) => {
     let query = {};
 
     // Search by name/description
-    if (search) {
+    if (search && typeof search === 'string') {
+      const safe = escapeRegex(search.slice(0, 100));
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { brand: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
+        { name: { $regex: safe, $options: 'i' } },
+        { description: { $regex: safe, $options: 'i' } },
+        { brand: { $regex: safe, $options: 'i' } },
+        { category: { $regex: safe, $options: 'i' } },
       ];
     }
 
     // Filter by category
-    if (category && category !== 'all') {
+    if (category && typeof category === 'string' && category !== 'all') {
       query.category = category;
     }
 
     // Filter by price range
     if (minPrice || maxPrice) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (minPrice && !isNaN(Number(minPrice))) query.price.$gte = Number(minPrice);
+      if (maxPrice && !isNaN(Number(maxPrice))) query.price.$lte = Number(maxPrice);
+      if (Object.keys(query.price).length === 0) delete query.price;
     }
 
     // Featured products only
@@ -44,42 +60,49 @@ router.get('/', async (req, res) => {
     if (sort === 'rating') sortOption = { rating: -1 };
     if (sort === 'name') sortOption = { name: 1 };
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 12));
+    const skip = (safePage - 1) * safeLimit;
     const total = await Product.countDocuments(query);
-    const products = await Product.find(query).sort(sortOption).skip(skip).limit(Number(limit));
+    const products = await Product.find(query).sort(sortOption).skip(skip).limit(safeLimit);
 
     res.json({
       success: true,
       data: products,
       pagination: {
         total,
-        page: Number(page),
-        pages: Math.ceil(total / Number(limit)),
-        limit: Number(limit),
+        page: safePage,
+        pages: Math.ceil(total / safeLimit),
+        limit: safeLimit,
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Products list error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load products.' });
   }
 });
 
 // GET /api/products/:id - Get single product
 router.get('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
     res.json({ success: true, data: product });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Product fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load product.' });
   }
 });
 
 // POST /api/products - Create product (admin only)
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const product = await Product.create(pickProductFields(req.body));
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -89,7 +112,10 @@ router.post('/', protect, adminOnly, async (req, res) => {
 // PUT /api/products/:id - Update product (admin only)
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    const product = await Product.findByIdAndUpdate(req.params.id, pickProductFields(req.body), {
       new: true,
       runValidators: true,
     });
@@ -105,18 +131,22 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 // DELETE /api/products/:id - Delete product (admin only)
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
     res.json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Product delete error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete product.' });
   }
 });
 
-// POST /api/products/seed - Seed sample data (development only)
-router.post('/seed/data', async (req, res) => {
+// POST /api/products/seed/data - Reset store to sample data (admin only)
+router.post('/seed/data', protect, adminOnly, async (req, res) => {
   try {
     await Product.deleteMany({});
 
@@ -309,7 +339,8 @@ router.post('/seed/data', async (req, res) => {
     const products = await Product.insertMany(sampleProducts);
     res.json({ success: true, message: `${products.length} products seeded`, data: products });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Seed error:', error);
+    res.status(500).json({ success: false, message: 'Seeding failed.' });
   }
 });
 
